@@ -31,30 +31,35 @@ class AnnouncementsManager {
                             date: new Date().toISOString().split('T')[0],
                             content: '',
                             important: title.includes('❗'),
-                            mediaType: 'none',
-                            mediaUrl: ''
+                            images: []
                         };
                     } else if (currentAnnouncement) {
                         node.children.forEach(child => {
-                            if (typeof child === 'string' && !child.includes('[video]')) {
-                                currentAnnouncement.content += child + ' ';
+                            if (typeof child === 'string') {
+                                currentAnnouncement.content += child;
+                            } else if (child.tag === 'br') {
+                                currentAnnouncement.content += '\n';
+                            } else if (child.tag === 'a' && child.attrs && child.attrs.href) {
+                                if (child.attrs.href.match(/\.(jpg|jpeg|png|gif)$/i) || child.attrs.href.includes('imgur.com')) {
+                                    currentAnnouncement.images.push(child.attrs.href);
+                                } else {
+                                    currentAnnouncement.content += child.attrs.href;
+                                }
                             }
                         });
+                        currentAnnouncement.content += '\n';
                     }
+                } else if (node.tag === 'br' && currentAnnouncement) {
+                    currentAnnouncement.content += '\n';
                 }
+                // Handle figure/image tags
                 else if (node.tag === 'figure' && currentAnnouncement) {
                     const img = node.children?.find(child => child.tag === 'img');
                     if (img && img.attrs && img.attrs.src) {
-                        currentAnnouncement.mediaType = 'image';
-                        currentAnnouncement.mediaUrl = img.attrs.src.startsWith('http') ? 
+                        const imageUrl = img.attrs.src.startsWith('http') ? 
                             img.attrs.src : 
                             'https://telegra.ph' + img.attrs.src;
-                    }
-                }
-                else if (node.tag === 'iframe' && currentAnnouncement) {
-                    if (node.attrs && node.attrs.src) {
-                        currentAnnouncement.mediaType = 'video';
-                        currentAnnouncement.mediaUrl = node.attrs.src;
+                        currentAnnouncement.images.push(imageUrl);
                     }
                 }
             });
@@ -101,22 +106,24 @@ class AnnouncementsManager {
         const announcementsHTML = `
             <style>
                 .announcements-container {
+                    width: 100%;
                     max-width: 800px;
                     margin: 0 auto;
-                    padding: 20px;
                 }
 
                 .announcement-card {
                     background: white;
                     border-radius: 12px;
-                    padding: 20px;
+                    padding: 25px;
                     margin-bottom: 20px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    transition: transform 0.2s ease;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 }
 
-                .announcement-card:hover {
-                    transform: translateY(-2px);
+                @media (max-width: 768px) {
+                    .announcement-card {
+                        padding: 20px;
+                        border-radius: 8px;
+                    }
                 }
 
                 .announcement-card.important {
@@ -126,51 +133,186 @@ class AnnouncementsManager {
                 .announcement-date {
                     color: #666;
                     font-size: 0.9em;
-                    margin-bottom: 8px;
+                    margin-bottom: 12px;
                 }
 
                 .announcement-title {
-                    font-size: 1.2em;
+                    font-size: 1.3em;
                     font-weight: 600;
-                    margin-bottom: 12px;
+                    margin-bottom: 20px;
                     color: #333;
+                    line-height: 1.3;
+                }
+
+                @media (max-width: 768px) {
+                    .announcement-title {
+                        font-size: 1.2em;
+                        margin-bottom: 15px;
+                    }
                 }
 
                 .announcement-content {
                     color: #444;
-                    line-height: 1.5;
-                    margin-bottom: 15px;
+                    line-height: 1.6;
+                    margin-bottom: 0;
+                    white-space: pre-wrap;
+                    font-size: 1em;
+                    word-break: break-word;
                 }
 
-                .announcement-media {
+                @media (max-width: 768px) {
+                    .announcement-content {
+                        font-size: 0.95em;
+                        line-height: 1.6;
+                        margin-bottom: 0;
+                    }
+                }
+
+                .store-link {
+                    display: block;
+                    padding: 15px;
+                    background: #f8f8f8;
+                    border-radius: 8px;
+                    margin: 15px 0;
+                    color: #333;
+                    text-decoration: none;
+                    transition: background 0.2s;
+                }
+
+                .store-link:hover {
+                    background: #f0f0f0;
+                    text-decoration: none;
+                }
+
+                .contact-section {
+                    margin-top: 25px;
+                    padding-top: 20px;
+                    border-top: 1px solid #eee;
+                }
+
+                .contact-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 0;
+                }
+
+                .contact-label {
+                    min-width: 120px;
+                    color: #666;
+                }
+
+                .contact-value {
+                    font-weight: 500;
+                    margin-left: 15px;
+                }
+
+                @media (max-width: 768px) {
+                    .contact-item {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        padding: 8px 0;
+                    }
+
+                    .contact-label {
+                        min-width: auto;
+                        margin-bottom: 4px;
+                    }
+
+                    .contact-value {
+                        margin-left: 0;
+                    }
+                }
+
+                .announcement-images {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
                     margin-top: 15px;
                 }
 
-                .announcement-media img {
-                    max-width: 100%;
-                    border-radius: 8px;
+                @media (max-width: 768px) {
+                    .announcement-images {
+                        grid-template-columns: 1fr;
+                        gap: 15px;
+                        margin-top: 12px;
+                    }
                 }
 
-                .announcement-media iframe {
+                .announcement-images img {
                     width: 100%;
-                    aspect-ratio: 16/9;
-                    border: none;
-                    border-radius: 8px;
+                    aspect-ratio: 1;
+                    object-fit: contain;
+                    background: #f8f8f8;
+                    border-radius: 12px;
+                    display: block;
+                }
+
+                @media (max-width: 768px) {
+                    .announcement-images img {
+                        aspect-ratio: 1;
+                        border-radius: 8px;
+                    }
                 }
 
                 .important-badge {
                     display: inline-block;
                     background: #ff2442;
                     color: white;
-                    padding: 2px 8px;
+                    padding: 4px 10px;
                     border-radius: 4px;
-                    font-size: 0.8em;
-                    margin-left: 8px;
+                    font-size: 0.85em;
+                    margin-left: 10px;
+                    font-weight: 500;
+                }
+
+                a {
+                    color: #007AFF;
+                    text-decoration: none;
+                    word-break: break-all;
+                }
+
+                a:hover {
+                    text-decoration: underline;
+                }
+
+                .contact-item {
+                    margin: 4px 0;
+                    padding: 8px 0;
+                }
+
+                .store-link {
+                    margin: 8px 0;
+                }
+
+                .empty-line {
+                    height: 8px;
                 }
             </style>
-            ${announcements
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map(announcement => `
+            ${announcements.map(announcement => {
+                const content = announcement.content
+                    .split('\n')
+                    .map(line => {
+                        if (!line.trim()) {
+                            return '';
+                        }
+                        if (line.includes('taobao.com')) {
+                            const storeName = line.split('：')[0];
+                            const storeUrl = line.split('：')[1].trim();
+                            return `<a href="${storeUrl}" class="store-link" target="_blank">${storeName}</a>`;
+                        }
+                        if (line.includes('wechat')) {
+                            const [label, value] = line.split('：');
+                            return `<div class="contact-item">
+                                <span class="contact-label">${label}</span>
+                                <span class="contact-value">${value}</span>
+                            </div>`;
+                        }
+                        return line;
+                    })
+                    .filter(line => line !== '')
+                    .join('\n');
+
+                return `
                     <div class="announcement-card ${announcement.important ? 'important' : ''}">
                         <div class="announcement-date">
                             ${this.formatDate(announcement.date)}
@@ -178,11 +320,22 @@ class AnnouncementsManager {
                                 '<span class="important-badge">Important</span>' : 
                                 ''}
                         </div>
-                        <div class="announcement-title">${announcement.title}</div>
-                        <div class="announcement-content">${announcement.content}</div>
-                        ${this.createMediaElement(announcement)}
+                        <div class="announcement-title">
+                            ${announcement.title
+                                .replace('购买地址', 'Shopping Links')
+                                .replace('联系方式', 'Contact Info')}
+                        </div>
+                        <div class="announcement-content">${content}</div>
+                        ${announcement.images.length > 0 ? `
+                            <div class="announcement-images">
+                                ${announcement.images.map(imageUrl => `
+                                    <img src="${imageUrl}" alt="Announcement image">
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </div>
-                `).join('')}
+                `;
+            }).join('')}
         `;
 
         this.announcementsContainer.innerHTML = announcementsHTML;
