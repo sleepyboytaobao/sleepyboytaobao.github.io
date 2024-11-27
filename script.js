@@ -1,35 +1,15 @@
 class ProductManager {
     constructor() {
         this.productsGrid = document.getElementById('productsGrid');
-        this.currentCategory = 'all';
     }
 
     async fetchProducts() {
         try {
-            const apiUrl = 'https://joyabuy.com/search-info/get-tb-shop-full';
-            const params = new URLSearchParams({
-                ShopId: '336502708',
-                Page: '1',
-                Language: 'en'
-            });
-
-            const response = await fetch(`${apiUrl}?${params}`, {
-                headers: {
-                    'accept': '*/*',
-                    'accept-language': 'en-GB,en;q=0.9',
-                    'referer': 'https://joyabuy.com/shops/',
-                    'sec-fetch-dest': 'empty',
-                    'sec-fetch-mode': 'cors',
-                    'sec-fetch-site': 'same-origin'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            const response = await fetch('https://retoolapi.dev/xgS1V9/data');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
             const data = await response.json();
-            return data.data.shopProducts.productList;
+            return data || [];
         } catch (error) {
             console.error('Error fetching products:', error);
             return [];
@@ -40,14 +20,16 @@ class ProductManager {
         const card = document.createElement('div');
         card.className = 'product-card';
         
+        const imageUrl = product['cardContainer--CwazTl0O src'].replace(/^https?:\/\//, '');
+        const formattedImageUrl = `https://${imageUrl}`;
+        
         card.innerHTML = `
-            <a href="https://item.taobao.com/item.htm?id=${product.id}" target="_blank">
-                <img src="${product.imgUrl}" alt="${product.name}" loading="lazy">
+            <a href="${product['linkWrapperArea--qYAJSUqA href']}" target="_blank">
+                <img src="${formattedImageUrl}" alt="${product['title--GExDBPUi']}" loading="lazy">
                 <div class="product-info">
-                    <h3>${product.name}</h3>
+                    <h3>${product['title--GExDBPUi']}</h3>
                     <div class="product-details">
-                        <span class="price">¥${product.price}</span>
-                        ${product.sold ? `<span class="sold">${product.sold} sold</span>` : ''}
+                        <span class="price">¥${product['priceUnEncode--_dE4HANk']}</span>
                     </div>
                 </div>
             </a>
@@ -56,21 +38,20 @@ class ProductManager {
     }
 
     filterProducts(products, category) {
-        if (category === 'all') return products;
+        const normalizedCategory = category.toLowerCase();
+        if (normalizedCategory === 'all products' || normalizedCategory === 'all') return products;
         
-        // Simple keyword matching for categories
         const categoryKeywords = {
-            'new': ['new', '2024'],
-            'tops': ['shirt', 'tee', 'hoodie', 'sweater', 'jacket'],
-            'bottoms': ['pants', 'shorts', 'jeans', 'trousers'],
-            'accessories': ['hat', 'cap', 'bag', 'socks', 'shoes'],
-            'sale': ['sale', 'discount']
+            'erd': ['erd', '忧郁的富二代'],
+            'undercover': ['undercover', 'undercove'],
+            'accessories': ['项链', '帽', 'hat', '包', 'bag', 'belt', 'necklace'],
+            'archive': ['archive', '档案', 'rare', '稀有', 'extinct', '绝迹']
         };
 
         return products.filter(product => {
-            const keywords = categoryKeywords[category.toLowerCase()];
+            const keywords = categoryKeywords[normalizedCategory];
             return keywords?.some(keyword => 
-                product.name.toLowerCase().includes(keyword)
+                product['title--GExDBPUi'].toLowerCase().includes(keyword.toLowerCase())
             );
         });
     }
@@ -166,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add active class to clicked item
             item.classList.add('active');
 
-            // Get category from text
-            const category = item.textContent.toLowerCase();
+            // Get category from text content
+            const category = item.textContent.trim();
             productManager.displayProducts(category);
 
             // Close menu on mobile

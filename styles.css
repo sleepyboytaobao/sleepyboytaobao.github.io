@@ -380,44 +380,104 @@ body {
 
 .updates-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 16px;
 }
 
 .update-card {
-    background: white;
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-}
-
-.update-card:hover {
-    transform: translateY(-5px);
 }
 
 .update-card img {
     width: 100%;
-    height: 400px;
+    height: 200px;
     object-fit: cover;
 }
 
 .update-info {
-    padding: 15px;
-}
-
-.update-info h3 {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-    color: var(--text-color);
+    padding: 12px;
 }
 
 .update-details {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--color-secondary);
+    font-size: 0.9em;
+    margin-top: 8px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #ff2442;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.error-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-secondary);
+}
+
+.error-message a {
+    color: var(--color-primary);
+    text-decoration: none;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.iframe-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--color-background);
+}
+
+.iframe-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.iframe-container .loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    text-align: center;
+    background: var(--color-background);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+/* Optional: Add a fade effect when iframe loads */
+.iframe-container iframe {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.iframe-container iframe[data-loaded="true"] {
+    opacity: 1;
 }
   
