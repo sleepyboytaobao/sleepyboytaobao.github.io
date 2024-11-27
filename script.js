@@ -5,7 +5,7 @@ class ProductManager {
 
     async fetchProducts() {
         try {
-            const response = await fetch('https://retoolapi.dev/xgS1V9/data');
+            const response = await fetch('https://api-generator.retool.com/FrjQnb/data');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const data = await response.json();
