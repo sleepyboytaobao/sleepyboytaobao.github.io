@@ -480,4 +480,29 @@ body {
 .iframe-container iframe[data-loaded="true"] {
     opacity: 1;
 }
+
+.announcements-button {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease forwards 0.7s;
+}
+
+.announcements-page {
+    padding: 20px;
+    min-height: 100vh;
+    background: var(--secondary-color);
+}
+
+.announcements-container {
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
   
